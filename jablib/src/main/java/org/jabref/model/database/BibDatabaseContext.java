@@ -68,31 +68,66 @@ public class BibDatabaseContext {
     private CoarseChangeFilter dbmsListener;
     private DatabaseLocation location;
 
-    public BibDatabaseContext() {
-        this(new BibDatabase());
-    }
-
-    public BibDatabaseContext(BibDatabase database) {
-        this(database, new MetaData());
-    }
-
-    public BibDatabaseContext(BibDatabase database, MetaData metaData) {
-        this.database = Objects.requireNonNull(database);
-        this.metaData = Objects.requireNonNull(metaData);
-        this.location = DatabaseLocation.LOCAL;
-    }
-
-    public BibDatabaseContext(BibDatabase database, MetaData metaData, Path path) {
-        this(database, metaData, path, DatabaseLocation.LOCAL);
-    }
-
-    public BibDatabaseContext(BibDatabase database, MetaData metaData, Path path, DatabaseLocation location) {
-        this(database, metaData);
-        Objects.requireNonNull(location);
-        this.path = path;
+    private BibDatabaseContext(Builder builder) {
+        this.database = builder.database;
+        this.path = builder.path;
+        this.metaData = builder.metaData;
+        this.location = builder.location;
 
         if (location == DatabaseLocation.LOCAL) {
             convertToLocalDatabase();
+        }
+    }
+
+    public static OptionalStage builder() {
+        return new Builder();
+    }
+
+    public interface OptionalStage {
+        OptionalStage setBibDatabase(BibDatabase database);
+
+        OptionalStage setPath(Path path);
+
+        OptionalStage setMetaData(MetaData metaData);
+
+        OptionalStage setDatabaseLocation(DatabaseLocation location);
+
+        BibDatabaseContext build();
+    }
+
+    public static class Builder implements OptionalStage {
+        BibDatabase database;
+        MetaData metaData;
+        Path path;
+        DatabaseLocation location = DatabaseLocation.LOCAL;
+
+        @Override
+        public OptionalStage setBibDatabase(BibDatabase database) {
+            this.database = Objects.requireNonNull(database);
+            return this;
+        }
+
+        @Override
+        public OptionalStage setMetaData(MetaData metaData) {
+            this.metaData = Objects.requireNonNull(metaData);
+            return this;
+        }
+
+        @Override
+        public OptionalStage setPath(Path path) {
+            this.path = Objects.requireNonNull(path);
+            return this;
+        }
+
+        @Override
+        public OptionalStage setDatabaseLocation(DatabaseLocation location) {
+            this.location = location;
+            return this;
+        }
+
+        @Override
+        public BibDatabaseContext build() {
+            return new BibDatabaseContext(this);
         }
     }
 
@@ -307,7 +342,12 @@ public class BibDatabaseContext {
     }
 
     public static BibDatabaseContext empty() {
-        return new BibDatabaseContext(new BibDatabase(), new MetaData());
+        //        return new BibDatabaseContext(new BibDatabase(), new MetaData());
+        return BibDatabaseContext
+                .builder()
+                .setBibDatabase(new BibDatabase())
+                .setMetaData(new MetaData())
+                .build();
     }
 
     @Override
